@@ -110,7 +110,9 @@ connect_to_desktopX(){
     ssh  -p 222 -X kyle@10.9.113.202
 }
 connect_to_nb_desk(){
-    rdesktop -g 90% -u kyle_lin -p 2wsx#EDC4rfv -d HTCTAIPEI kyle_lin_nb.htc.com.tw
+    #rdesktop -f  -K -r sound:local -r clipboard:CLIPBOARD -r disk:desktop=/home/kyle/rdesktop -u kyle_lin -d htctaipei kyle_lin_w7p.htctaipei.htc.com.tw &> /dev/null &
+    remmina -c ~/bootsh/1395114018713.remmina &> /dev/null &
+    #rdesktop -f -g 95%  -r sound:local -r clipboard:PRIMARYCLIPBOARD -r disk:desktop=/home/kyle/rdesktop -u kyle_lin -d htctaipei 10.116.229.210&
 }
 
 openvpn(){
@@ -249,10 +251,192 @@ else
 fi
 }
 
-remove_watermark(){
+
+stop_qct_service(){
+    sudo adb shell stop mpdecision && sudo adb shell stop adaptive && sudo adb shell stop mpdecision && sudo adb shell stop thermald
+}
+restart_pnpmgr(){
+    sudo adb shell stop pnpmgr && sudo adb shell start pnpmgr
+}
+
+remove_watermark_sense4(){                                                                                                                                                                                                                     
 sudo adb remount
-sudo adb pull /data/dalvik-cache/system@framework@services.jar@classes.dex /tmp/system@framework@services.jar@classes.dex
-perl -pi -e 's/com\/android\/server\/ShowWatermarkService/cmm\/android\/server\/ShowWatermarkService/g' /tmp/system@framework@services.jar@classes.dex
+sudo adb pull /data/dalvik-cache/system@framework@services.jar@classes.dex system@framework@services.jar@classes.dex
+sudo perl -pi -e 's/com\/android\/server\/ShowWatermarkService/cmm\/android\/server\/ShowWatermarkService/g' system@framework@services.jar@classes.dex
 sudo adb push system@framework@services.jar@classes.dex /data/dalvik-cache/
 sudo adb reboot
+rm -rf system@framework@services.jar@classes.dex
+}
+
+remove_watermark_sense5(){
+cd /tmp; #rm -fr framework; mkdir framework; cd framework
+adb pull /system/framework/services.jar services_bak.jar
+jar xf services_bak.jar; baksmali classes.dex
+
+echo '.class public Lcom/android/server/ShowWatermarkService;
+.super Landroid/app/Service;
+.source "ShowWatermarkService.java"
+
+
+# direct methods
+.method public constructor <init>()V
+    .registers 1
+
+    .prologue
+    .line 7
+    invoke-direct {p0}, Landroid/app/Service;-><init>()V
+
+    return-void
+.end method
+
+
+# virtual methods
+.method public onBind(Landroid/content/Intent;)Landroid/os/IBinder;
+    .registers 3
+    .parameter "intent"
+
+    .prologue
+    .line 10
+    const/4 v0, 0x0
+
+    return-object v0
+.end method' > out/com/android/server/ShowWatermarkService.smali
+
+smali -o classes.dex out; jar cfM services.jar classes.dex META-INF/
+
+adb remount
+adb pull /system/framework/services.jar services.jar.bak
+adb push services.jar /system/framework/services.jar
+adb reboot
+sudo rm -rf servcie_bak.jar servcie.jar
+cd -
+}
+
+get_device_logs(){
+    serialno=$(adb shell getprop ro.boot.serialno|sed 's///')
+    mkdir $serialno
+    adb pull /sdcard/htclog/ $serialno/
+    adb pull /data/htclog/ $serialno/
+    adb bugreport > $serialno/bugreport.txt
+}
+
+mount_ssd_share(){
+     sudo mount -t cifs //andssd2.htc.com.tw/AND_SSD/andssd_shared/ /andssd2 -o user=kyle_lin,password='2wsx#EDC4rfv'
+}
+
+get_zara_dug_ram_dump(){
+    ramdumpdate=$(date +"%Y%m%d%H%M%S")
+    mkdir $ramdumpdate
+    echo "============ Dump framebuffer ============"
+    fastboot getfb $ramdumpdate/resetMSG.bmp
+    echo "================ End ====================="
+    echo "============ Dump ram console============"
+    fastboot dump ram $ramdumpdate/LAST_KMSG.RAM 0xAFE00000  0x001E0000
+    echo "================ End ====================="
+    echo "============ Dump TZ log============"
+    fastboot oem dump_tzlog
+    echo "================ End ====================="
+
+    echo "============ Dump CP ================="
+    fastboot dump ram $ramdumpdate/CP.RAM 0x80000000 0x2000000
+    echo "================ End ====================="
+    echo "============ Dump AP ==============="
+    fastboot dump ram $ramdumpdate/AP.RAM 0x82000000 0x3E000000
+    rm $ramdump/*.hex
+    echo "================ End ====================="
+}
+
+run_cfbenchmark(){
+    echo "execute cf benchmark"
+    adb shell am start -a android.intent.MAIN -n eu.chainfire.cfbench/eu.chainfire.cfbench.MainActivity
+    adb shell input touchscreen tap 160 950
+}
+
+android_input_command_help(){
+    echo '0 -->  "KEYCODE_UNKNOWN" 
+    1 -->  "KEYCODE_MENU" 
+    2 -->  "KEYCODE_SOFT_RIGHT" 
+    3 -->  "KEYCODE_HOME" 
+    4 -->  "KEYCODE_BACK" 
+    5 -->  "KEYCODE_CALL" 
+    6 -->  "KEYCODE_ENDCALL" 
+    7 -->  "KEYCODE_0" 
+    8 -->  "KEYCODE_1" 
+    9 -->  "KEYCODE_2" 
+    10 -->  "KEYCODE_3" 
+    11 -->  "KEYCODE_4" 
+    12 -->  "KEYCODE_5" 
+    13 -->  "KEYCODE_6" 
+    14 -->  "KEYCODE_7" 
+    15 -->  "KEYCODE_8" 
+    16 -->  "KEYCODE_9" 
+    17 -->  "KEYCODE_STAR" 
+    18 -->  "KEYCODE_POUND" 
+    19 -->  "KEYCODE_DPAD_UP" 
+    20 -->  "KEYCODE_DPAD_DOWN" 
+    21 -->  "KEYCODE_DPAD_LEFT" 
+    22 -->  "KEYCODE_DPAD_RIGHT" 
+    23 -->  "KEYCODE_DPAD_CENTER" 
+    24 -->  "KEYCODE_VOLUME_UP" 
+    25 -->  "KEYCODE_VOLUME_DOWN" 
+    26 -->  "KEYCODE_POWER" 
+    27 -->  "KEYCODE_CAMERA" 
+    28 -->  "KEYCODE_CLEAR" 
+    29 -->  "KEYCODE_A" 
+    30 -->  "KEYCODE_B" 
+    31 -->  "KEYCODE_C" 
+    32 -->  "KEYCODE_D" 
+    33 -->  "KEYCODE_E" 
+    34 -->  "KEYCODE_F" 
+    35 -->  "KEYCODE_G" 
+    36 -->  "KEYCODE_H" 
+    37 -->  "KEYCODE_I" 
+    38 -->  "KEYCODE_J" 
+    39 -->  "KEYCODE_K" 
+    40 -->  "KEYCODE_L" 
+    41 -->  "KEYCODE_M" 
+    42 -->  "KEYCODE_N" 
+    43 -->  "KEYCODE_O" 
+    44 -->  "KEYCODE_P" 
+    45 -->  "KEYCODE_Q" 
+    46 -->  "KEYCODE_R" 
+    47 -->  "KEYCODE_S" 
+    48 -->  "KEYCODE_T" 
+    49 -->  "KEYCODE_U" 
+    50 -->  "KEYCODE_V" 
+    51 -->  "KEYCODE_W" 
+    52 -->  "KEYCODE_X" 
+    53 -->  "KEYCODE_Y" 
+    54 -->  "KEYCODE_Z" 
+    55 -->  "KEYCODE_COMMA" 
+    56 -->  "KEYCODE_PERIOD" 
+    57 -->  "KEYCODE_ALT_LEFT" 
+    58 -->  "KEYCODE_ALT_RIGHT" 
+    59 -->  "KEYCODE_SHIFT_LEFT" 
+    60 -->  "KEYCODE_SHIFT_RIGHT" 
+    61 -->  "KEYCODE_TAB" 
+    62 -->  "KEYCODE_SPACE" 
+    63 -->  "KEYCODE_SYM" 
+    64 -->  "KEYCODE_EXPLORER" 
+    65 -->  "KEYCODE_ENVELOPE" 
+    66 -->  "KEYCODE_ENTER" 
+    67 -->  "KEYCODE_DEL" 
+    68 -->  "KEYCODE_GRAVE" 
+    69 -->  "KEYCODE_MINUS" 
+    70 -->  "KEYCODE_EQUALS" 
+    71 -->  "KEYCODE_LEFT_BRACKET" 
+    72 -->  "KEYCODE_RIGHT_BRACKET" 
+    73 -->  "KEYCODE_BACKSLASH" 
+    74 -->  "KEYCODE_SEMICOLON" 
+    75 -->  "KEYCODE_APOSTROPHE" 
+    76 -->  "KEYCODE_SLASH" 
+    77 -->  "KEYCODE_AT" 
+    78 -->  "KEYCODE_NUM" 
+    79 -->  "KEYCODE_HEADSETHOOK" 
+    80 -->  "KEYCODE_FOCUS" 
+    81 -->  "KEYCODE_PLUS" 
+    82 -->  "KEYCODE_MENU" 
+    83 -->  "KEYCODE_NOTIFICATION" 
+    84 -->  "KEYCODE_SEARCH" 
+    85 -->  "TAG_LAST_KEYCODE"                                                                                     '
 }

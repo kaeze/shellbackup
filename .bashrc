@@ -123,6 +123,7 @@ alias reboot='sudo reboot -h 0'
 alias t32checkusb='sudo /opt/t32/bin/pc_linux/t32usbchecker'
 alias t32ap30='sudo /opt/t32/bin/pc_linux/t32marm -c /opt/t32/T30_Android/config.t32,/opt/t32/T30_Android/startup.cmm'
 alias syncAndroidTime='sudo $(which adb) shell date -s $(date +%Y%m%d.%H%M00)'
+alias vi='vim'
 
 #add PATH from QEMU and Embadded Linux
 PATH=/home/kyle/arm-eabi-4.4.0/bin:/usr/lib/newlib/i486-linux-gnu/include:/home/kyle/myrepo/depot_tools:/home/kyle/toolchain/bin:/home/kyle/p4v/bin:$PATH
@@ -141,8 +142,12 @@ export KERNEL="/home/kyle/proj/copd/nv_kernel-2.6.36-3/"
 export COHC="/home/kyle/proj/12r5/hc/"
 export COGB="/home/kyle/proj/12r5/gb/"
 export EDITOR="vim"
-alias get_ram_dump="adb shell 'cat /dev/block/platform/sdhci-tegra.3/by-name/DUM' > saved_filename"
+#alias get_ram_dump="adb shell 'cat /dev/block/platform/sdhci-tegra.3/by-name/DUM' > saved_filename"
 
 #startibus
 #startsynergys
 export HISTTIMEFORMAT='%F %T > '
+
+export GTK_IM_MODULE=fcitx
+export QT_IM_MODULE=fcitx
+export XMODIFIERS=”@im=fcitx”
